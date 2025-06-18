@@ -12,6 +12,8 @@ import random
 coins = 0
 click_power = 1
 upgrade_cost = 10  # 初始升級費用
+special_attacks_left = 3  # 大招剩餘次數
+special_attack_power = 3  # 大招攻擊力（初始點擊力1的3倍）
 
 
 def center_window(window, width=400, height=300):
@@ -36,9 +38,14 @@ def center_window(window, width=400, height=300):
 
 def update_stats():
     """更新統計資訊顯示。"""
-    global coins, click_power, coins_label, power_label
+    global coins, click_power, coins_label, power_label, special_attacks_left, special_attack_power, special_label, special_power_label
     coins_label.config(text=f"💰 金幣: {coins}")
     power_label.config(text=f"⚡ 點擊力: {click_power}")
+    special_label.config(text=f"🔥 大招: {special_attacks_left}次")
+    special_power_label.config(text=f"攻擊力: {special_attack_power}")
+    
+    # 調試輸出
+    print(f"更新統計 - 點擊力: {click_power}, 大招攻擊力: {special_attack_power}")
 
 
 def update_upgrade_button():
@@ -49,7 +56,7 @@ def update_upgrade_button():
 
 def upgrade_click_power():
     """升級點擊力。"""
-    global coins, click_power, upgrade_cost, upgrade_button
+    global coins, click_power, upgrade_cost, upgrade_button, special_attack_power
     
     # 檢查是否有足夠的金幣
     if coins >= upgrade_cost:
@@ -59,12 +66,18 @@ def upgrade_click_power():
         # 增加點擊力
         click_power += 1
         
+        # 更新大招攻擊力（點擊力的3倍）
+        special_attack_power = click_power * 3
+        
         # 計算下次升級費用（隨機增加10-30）
         upgrade_cost += random.randint(10, 30)
         
         # 更新顯示
         update_stats()
         update_upgrade_button()
+        
+        # 調試輸出
+        print(f"升級後 - 點擊力: {click_power}, 大招攻擊力: {special_attack_power}")
         
         # 如果金幣不足，禁用按鈕
         if coins < upgrade_cost:
@@ -97,28 +110,33 @@ def on_click(event):
 
 def on_right_click(event):
     """滑鼠右鍵點擊事件處理函數。"""
-    global image_label, hero_img, hero_right_click_img, coins, click_power, upgrade_button, upgrade_cost
+    global image_label, hero_img, hero_right_click_img, coins, click_power, upgrade_button, upgrade_cost, special_attacks_left, special_attack_power
     
-    # 增加金幣（右鍵點擊增加3倍）
-    coins += click_power * 3
-    
-    # 更新統計顯示
-    update_stats()
-    
-    # 檢查是否可以啟用升級按鈕
-    if coins >= upgrade_cost:
-        upgrade_button.config(state="normal")
-    
-    # 切換到右鍵點擊圖片
-    image_label.config(image=hero_right_click_img)
-    
-    # 200毫秒後自動切換回原始圖片
-    image_label.after(200, lambda: image_label.config(image=hero_img))
+    # 檢查是否還有大招次數
+    if special_attacks_left > 0:
+        # 減少大招次數
+        special_attacks_left -= 1
+        
+        # 增加金幣（大招攻擊力）
+        coins += special_attack_power
+        
+        # 更新統計顯示
+        update_stats()
+        
+        # 檢查是否可以啟用升級按鈕
+        if coins >= upgrade_cost:
+            upgrade_button.config(state="normal")
+        
+        # 切換到右鍵點擊圖片
+        image_label.config(image=hero_right_click_img)
+        
+        # 200毫秒後自動切換回原始圖片
+        image_label.after(200, lambda: image_label.config(image=hero_img))
 
 
 def main():
     """主程式函數。"""
-    global image_label, hero_img, hero_click_img, hero_right_click_img, coins_label, power_label, upgrade_button
+    global image_label, hero_img, hero_click_img, hero_right_click_img, coins_label, power_label, upgrade_button, special_label, special_power_label
     
     # 建立主視窗
     root = tk.Tk()
@@ -127,7 +145,7 @@ def main():
     root.title("點擊英雄")
     
     # 將視窗置中顯示
-    center_window(root, 500, 500)
+    center_window(root, 500, 550)
     
     # 建立遊戲標題標籤
     title_label = tk.Label(
@@ -143,8 +161,8 @@ def main():
     # 使用 Canvas 創建圓角矩形
     canvas = tk.Canvas(
         root,
-        width=300,
-        height=60,
+        width=350,
+        height=80,
         bg="white",  # 背景設為白色，之後會被圓角矩形覆蓋
         highlightthickness=0  # 移除邊框
     )
@@ -169,40 +187,64 @@ def main():
     )
     
     # 繪製深灰色圓角矩形背景
-    canvas.create_rounded_rectangle(0, 0, 300, 60, 15, fill="#404040", outline="#404040")
+    canvas.create_rounded_rectangle(0, 0, 350, 80, 15, fill="#404040", outline="#404040")
     
     # 建立金幣標籤
     coins_label = tk.Label(
         canvas,
         text="💰 金幣: 0",
-        font=("Arial", 14, "bold"),
+        font=("Arial", 12, "bold"),
         fg="gold",
         bg="#404040",  # 深灰色背景
-        padx=15,
-        pady=8
+        padx=10,
+        pady=5
     )
-    canvas.create_window(80, 30, window=coins_label)
+    canvas.create_window(70, 25, window=coins_label)
+    
+    # 建立點擊力標籤
+    power_label = tk.Label(
+        canvas,
+        text="⚡ 點擊力: 1",
+        font=("Arial", 12, "bold"),
+        fg="orange",
+        bg="#404040",  # 深灰色背景
+        padx=10,
+        pady=5
+    )
+    canvas.create_window(70, 55, window=power_label)
     
     # 建立分隔線
     separator = tk.Frame(
         canvas,
         bg="#666666",  # 較淺的灰色
         width=2,
-        height=30
+        height=50
     )
-    canvas.create_window(150, 30, window=separator)
+    canvas.create_window(175, 40, window=separator)
     
-    # 建立點擊力標籤
-    power_label = tk.Label(
+    # 建立大招標籤
+    special_label = tk.Label(
         canvas,
-        text="⚡ 點擊力: 1",
-        font=("Arial", 14, "bold"),
-        fg="orange",
+        text="🔥 大招: 3次",
+        font=("Arial", 12, "bold"),
+        fg="red",
         bg="#404040",  # 深灰色背景
-        padx=15,
-        pady=8
+        padx=10,
+        pady=5
     )
-    canvas.create_window(220, 30, window=power_label)
+    canvas.create_window(280, 25, window=special_label)
+    
+    # 建立大招攻擊力標籤
+    special_power_label = tk.Label(
+        canvas,
+        text="攻擊力: 3",
+        font=("Arial", 12, "bold"),
+        fg="red",
+        bg="#404040",  # 深灰色背景
+        padx=10,
+        pady=5
+    )
+    canvas.create_window(280, 55, window=special_power_label)
     
     # 載入圖片
     try:
@@ -259,13 +301,18 @@ def main():
     upgrade_button = tk.Button(
         root,
         text="升級點擊力 (花費: 10 金幣)",
-        font=("Arial", 14, "bold"),
+        font=("Arial", 16, "bold"),
         fg="white",
-        bg="darkblue",
-        padx=20,
-        pady=10,
+        bg="#4CAF50",  # 綠色背景
+        activebackground="#45a049",  # 按下時的顏色
+        activeforeground="white",
+        relief="raised",  # 凸起效果
+        bd=3,  # 邊框寬度
+        padx=35,
+        pady=15,
         command=upgrade_click_power,
-        state="disabled"  # 初始狀態為禁用
+        state="disabled",  # 初始狀態為禁用
+        cursor="hand2"  # 滑鼠懸停時顯示手型游標
     )
     upgrade_button.pack(pady=20)
     
