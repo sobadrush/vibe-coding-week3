@@ -7,6 +7,7 @@
 import tkinter as tk
 from PIL import Image, ImageTk
 import random
+import time
 
 # 全域變數
 coins = 0
@@ -110,7 +111,7 @@ def on_click(event):
 
 def on_right_click(event):
     """滑鼠右鍵點擊事件處理函數。"""
-    global image_label, hero_img, hero_right_click_img, coins, click_power, upgrade_button, upgrade_cost, special_attacks_left, special_attack_power
+    global image_label, hero_img, hero_right_click_img, coins, click_power, upgrade_button, upgrade_cost, special_attacks_left, special_attack_power, root
     
     # 檢查是否還有大招次數
     if special_attacks_left > 0:
@@ -127,6 +128,9 @@ def on_right_click(event):
         if coins >= upgrade_cost:
             upgrade_button.config(state="normal")
         
+        # 觸發震動效果
+        shake_window(root, intensity=8, duration=300)
+        
         # 切換到右鍵點擊圖片
         image_label.config(image=hero_right_click_img)
         
@@ -134,9 +138,44 @@ def on_right_click(event):
         image_label.after(200, lambda: image_label.config(image=hero_img))
 
 
+def shake_window(window, intensity=5, duration=200):
+    """讓視窗產生震動效果。
+    
+    Args:
+        window: Tkinter 視窗物件
+        intensity: 震動強度（像素）
+        duration: 震動持續時間（毫秒）
+    """
+    # 記錄原始位置
+    original_geometry = window.geometry()
+    x, y = window.winfo_x(), window.winfo_y()
+    
+    # 震動次數
+    shake_count = 8
+    interval = duration // shake_count
+    
+    def shake_step(step):
+        if step < shake_count:
+            # 隨機偏移
+            offset_x = random.randint(-intensity, intensity)
+            offset_y = random.randint(-intensity, intensity)
+            
+            # 移動視窗
+            window.geometry(f"+{x + offset_x}+{y + offset_y}")
+            
+            # 安排下一次震動
+            window.after(interval, lambda: shake_step(step + 1))
+        else:
+            # 恢復原始位置
+            window.geometry(original_geometry)
+    
+    # 開始震動
+    shake_step(0)
+
+
 def main():
     """主程式函數。"""
-    global image_label, hero_img, hero_click_img, hero_right_click_img, coins_label, power_label, upgrade_button, special_label, special_power_label
+    global image_label, hero_img, hero_click_img, hero_right_click_img, coins_label, power_label, upgrade_button, special_label, special_power_label, root
     
     # 建立主視窗
     root = tk.Tk()
