@@ -323,8 +323,9 @@ def main():
         # 綁定滑鼠左鍵點擊事件
         image_label.bind("<Button-1>", on_click)
         
-        # 綁定滑鼠右鍵點擊事件
+        # 綁定滑鼠右鍵點擊事件（相容 Windows 和 macOS）
         image_label.bind("<Button-3>", on_right_click)
+        image_label.bind("<Button-2>", on_right_click)
         
     except Exception as e:
         # 如果圖片載入失敗，顯示錯誤訊息
